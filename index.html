@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html" charset="utf-8"/>
+    <title>Cre8mania NY Exhibition Demo</title>
+    <!-- Link to the last version of BabylonJS -->
+    <script src="https://preview.babylonjs.com/babylon.js"></script>
+    <!-- Link to the last version of BabylonJS loaders to enable loading filetypes such as .gltf -->
+    <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    <!-- Link to pep.js to ensure pointer events work consistently in all browsers -->
+    <script src="https://code.jquery.com/pep/0.4.1/pep.js"></script>
+    <!-- Link to BJS GUI -->
+    <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+    
+    
+    
+    <style>
+        html, body {
+            overflow: hidden;
+            width   : 100%;
+            height  : 100%;
+            margin  : 0;
+            padding : 0;
+        }
+
+        #renderCanvas {
+            width   : 100%;
+            height  : 100%;
+            touch-action: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <script>
+        window.addEventListener('DOMContentLoaded', function(){
+            // get the canvas DOM element
+            var canvas = document.getElementById('renderCanvas');
+
+            // load the 3D engine
+            var engine = new BABYLON.Engine(canvas, true);
+
+            // createScene function that creates and return the scene
+           BABYLON.SceneLoader.Load("","scene.babylon",engine,function(newScene){
+               var scene = newScene;
+               scene.executeWhenReady(function(){
+            
+                   //Execute here
+                   
+                   
+                   
+                   
+                   
+                   
+                   
+                   
+                   
+                   
+           //-------------------------------Camera Setup-----------------------------------------------------
+           var camheight = 15;
+           var camera = new BABYLON.FreeCamera("FreeCam",new BABYLON.Vector3(-10 ,camheight, -10),scene,true);
+            camera.inputs.removeByType("FreeCameraKeyboardMoveInput");
+            scene.activeCamera = camera;
+
+            var canvas = document.getElementById("renderCanvas");
+            scene.activeCamera.attachControl(canvas,true);
+
+            console.log(scene.activeCamera);
+            //target mesh
+            var targetMesh=null;
+//--------------------------------Camera Move Animation------------------
+
+            var camAnimation = function (){
+
+                 targetMesh.setEnabled(false);
+
+                if(advancedTexture){
+                advancedTexture.removeControl(button1);
+                advancedTexture.removeControl(button2);
+                }
+                
+               // var matrix = targetMesh.TransformCoordinates
+                var targetpos = targetMesh.getAbsolutePosition();
+                targetpos.y = camheight;
+
+                //targetMesh.rotationQuaternion = null;
+                
+                var targetrot = targetMesh.rotation;
+                console.log(targetrot.y);
+
+                
+                
+                 var ang1 = camera.rotation.y;
+                 var ang2 = targetrot.y;
+                 var angDiffT = ang2 - ang1;
+
+                            angDiffT %= Math.PI * 2;
+
+                         if (angDiffT > Math.PI)
+                         angDiffT -= Math.PI * 2;
+                          else if (angDiffT < -Math.PI)
+                               angDiffT += Math.PI * 2;
+
+                       
+                       targetrot.y = ang1 + angDiffT;
+                       
+                    
+                    var ease = new BABYLON.CubicEase();
+                    ease.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEINOUT);
+	                BABYLON.Animation.CreateAndStartAnimation('at5', camera, 'position', 30, 120, camera.position, targetpos, 0, ease,animEnd);
+                    BABYLON.Animation.CreateAndStartAnimation('at5', camera, 'rotation', 30, 120, camera.rotation,targetrot, 0, ease);
+                } 
+                //target reached
+                var animEnd = function(){scene.activeCamera.attachControl(canvas,true); 
+
+                        if (advancedTexture){
+                                            advancedTexture.addControl(button1);
+                                                    advancedTexture.addControl(button2);  }
+                            
+                }
+
+//--------------------------------------Mouse input Control-------------------------------------------------
+    scene.onPointerObservable.add((pointerInfo) => {
+		switch (pointerInfo.type) {
+			case BABYLON.PointerEventTypes.POINTERDOWN:
+				// console.log("scene pointer event. pointerInfo obj:", pointerInfo);
+				console.log("scene pointer event - pickedMesh:", 
+                    (pointerInfo.pickInfo.pickedMesh ? pointerInfo.pickInfo.pickedMesh.name : "none"));
+                
+                if (pointerInfo.pickInfo.pickedMesh) {  //&& pointerInfo.pickInfo.pickedMesh != targetMesh
+        // is cam point
+                                      
+                if(pointerInfo.pickInfo.pickedMesh.parent && pointerInfo.pickInfo.pickedMesh.parent.name == ("CamViews")) {
+                    //stop mouse
+                    scene.activeCamera.detachControl(canvas);
+                    //assign target
+                    if(targetMesh) {scene.getMeshByName(targetMesh.name).setEnabled(true);}
+                    targetMesh = (pointerInfo.pickInfo.pickedMesh);
+                    //hide target
+                   // scene.getMeshByName(pointerInfo.pickInfo.pickedMesh.name).setEnabled(false);
+                            
+                             camAnimation();                            
+                 }
+
+        /*/ is painting
+                 if(pointerInfo.pickInfo.pickedMesh.parent && pointerInfo.pickInfo.pickedMesh.parent.name == ("Paintings")) {
+                    //stop mouse
+                    scene.activeCamera.detachControl(canvas);
+                    //assign target
+                    //if(targetMesh) {scene.getMeshByName(targetMesh.name).setEnabled(true);}
+                    targetMesh = (pointerInfo.pickInfo.pickedMesh);
+                    //hide target
+                    //scene.getMeshByName(pointerInfo.pickInfo.pickedMesh.name).setEnabled(false);
+                
+
+                 }*/  
+                }
+			 break;
+
+        }
+    });
+
+
+//------------------------------------------GUI Move Auto------------------------
+
+            var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+          
+
+                var button1 = BABYLON.GUI.Button.CreateImageOnlyButton ("Forw", "NavIcon.png");
+                button1.width = "100px";
+                button1.height ="100px";
+                button1.color = "transparent";
+                button1.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
+                button1.top = "200px";
+
+            button1.onPointerUpObservable.add(function() {
+            
+            advancedTexture.removeControl(button1);
+            advancedTexture.removeControl(button2);  
+                    //assign target
+
+             if(targetMesh != null) {
+                 
+                    scene.getMeshByName(targetMesh.name).setEnabled(true);
+                    var id = targetMesh.name;
+                    var idint = parseInt(id.substr(id.length - 1));
+                    
+                    if(idint > 9){
+                        idint = 1;
+                    }
+                    else{
+                        idint =idint + 1;
+
+                    }
+                    
+                    scene.activeCamera.detachControl(canvas);
+                    targetMesh = scene.getMeshByName('Arrow '+ idint.toString());
+                    camAnimation();
+                    
+                    
+             }
+
+            else {
+                    scene.activeCamera.detachControl(canvas);
+                    targetMesh = scene.getMeshByName('Arrow 1');
+                    camAnimation();
+                    
+
+            }
+
+             });
+
+
+
+                        var button2 = BABYLON.GUI.Button.CreateImageOnlyButton ("Back", "NavIcon.png");
+            button2.width = "100px"
+            button2.height = "100px";
+            button2.color = "transparent";
+            button2.rotation=Math.PI;
+            button2.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+            button2.top = "200px";
+
+            button2.onPointerUpObservable.add(function() {
+            
+             advancedTexture.removeControl(button1);
+             advancedTexture.removeControl(button2);         
+
+             if(targetMesh != null) {
+                 
+                    scene.getMeshByName(targetMesh.name).setEnabled(true);
+                    var id = targetMesh.name;
+                    var idint = parseInt(id.substr(id.length - 1));
+                    
+                    if(idint < 2){
+                        idint = 10;
+                    }
+                    else{
+                        idint = idint - 1;
+
+                    }
+                    
+                    scene.activeCamera.detachControl(canvas);
+                    targetMesh = scene.getMeshByName('Arrow '+ idint.toString());
+                    camAnimation();
+                    
+                    
+             }
+
+            else {
+                    scene.activeCamera.detachControl(canvas);
+                    targetMesh = scene.getMeshByName('Arrow 3');
+                    camAnimation();
+            }        
+                          
+               
+             });
+            
+            
+            advancedTexture.addControl(button1);
+            advancedTexture.addControl(button2);
+
+                   
+                   
+                   
+                   
+                   
+                   
+                   
+                   
+                   
+                   
+                   
+                   
+                   
+                   
+                   
+                   
+                   
+                   
+                   
+                   
+                   
+                   
+                   
+                   
+                   
+                    // run the render loop
+                    engine.runRenderLoop(function(){
+                    scene.render();
+                    });  
+                   
+               });
+           });
+
+          
+
+            // the canvas/window resize event handler
+            window.addEventListener('resize', function(){
+                engine.resize();
+            });
+        });
+    </script>
+</body>
+</html>
